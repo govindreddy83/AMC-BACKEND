@@ -101,24 +101,8 @@ class PlannerDetailService {
       }
     }
 
-    // Default fallback item if keyfile missing or row not found
-    return {
-      plannerNumber: plannerNo,
-      poNumber: '98768678',
-      customerName: 'Acme Printing & Industrial Corp',
-      machineName: 'Web Offset Printing Machine #2',
-      location: 'Plant 1 / Area P1',
-      startDate: '20-02-2026',
-      endDate: '22-09-2026',
-      plannedPm: '02',
-      completedPm: '02',
-      pendingPm: '00',
-      firstPmDate: '22-03-2026',
-      secondPmDate: '22-09-2026',
-      thirdPmDate: 'N/A',
-      fourthPmDate: 'N/A',
-      remarks: 'All planned preventive maintenance visits executed successfully.',
-    };
+    // Return null if row not found or keyfile missing
+    return null;
   }
 }
 

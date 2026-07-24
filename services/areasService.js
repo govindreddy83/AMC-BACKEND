@@ -59,11 +59,6 @@ class AreasService {
       }
     }
 
-    // Default fallback unique areas if sheet is empty or keyfile not provided yet
-    if (uniqueAreaSet.size === 0) {
-      ['QC', 'P1', 'P2', 'P3'].forEach((a) => uniqueAreaSet.add(a));
-    }
-
     // Map unique values to array of objects { id, area }
     const uniqueAreaList = Array.from(uniqueAreaSet);
     return uniqueAreaList.map((areaName, index) => ({
