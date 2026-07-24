@@ -4,6 +4,7 @@ const sheetsRoutes = require('./sheetsRoutes');
 const areasRoutes = require('./areasRoutes');
 const plannersRoutes = require('./plannersRoutes');
 const plannerDetailRoutes = require('./plannerDetailRoutes');
+const diagnosticController = require('../controllers/diagnosticController');
 
 // API Healthcheck route
 router.get('/health', (req, res) => {
@@ -13,6 +14,9 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Diagnostic route
+router.get('/diagnostic', diagnosticController.runDiagnostic);
 
 // Mount Routes
 router.use('/sheets', sheetsRoutes);
