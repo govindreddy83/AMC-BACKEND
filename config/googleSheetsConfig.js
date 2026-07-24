@@ -16,10 +16,23 @@ const getGoogleSheetsClient = () => {
   let auth;
   let fileExists = false;
 
-  // 1. Try stringified JSON environment variable (Best for Render/Cloud deployment)
-  if (credsJson) {
+  const isJsonString = (str) => {
+    if (!str) return false;
+    const trimmed = str.trim();
+    return trimmed.startsWith('{') && trimmed.endsWith('}');
+  };
+
+  // 1. Try parsing JSON content directly (if pasted into GOOGLE_CREDS_JSON or GOOGLE_APPLICATION_CREDENTIALS)
+  let rawJson = null;
+  if (isJsonString(credsJson)) {
+    rawJson = credsJson;
+  } else if (isJsonString(credentialsPath)) {
+    rawJson = credentialsPath;
+  }
+
+  if (rawJson) {
     try {
-      const credentials = JSON.parse(credsJson);
+      const credentials = JSON.parse(rawJson);
       auth = new google.auth.JWT(
         credentials.client_email,
         null,
@@ -28,14 +41,14 @@ const getGoogleSheetsClient = () => {
       );
       fileExists = true;
     } catch (e) {
-      console.error('⚠️ Error parsing GOOGLE_CREDS_JSON environment variable:', e.message);
+      console.error('⚠️ Error parsing credentials JSON string:', e.message);
     }
   }
 
   // 2. Fallback to standard keyfile path (Best for local development)
   if (!auth) {
     if (!credentialsPath) {
-      throw new Error('Neither GOOGLE_APPLICATION_CREDENTIALS nor GOOGLE_CREDS_JSON is specified in .env');
+      throw new Error('Neither GOOGLE_APPLICATION_CREDENTIALS nor GOOGLE_CREDS_JSON is specified');
     }
 
     const resolvedPath = path.isAbsolute(credentialsPath)
