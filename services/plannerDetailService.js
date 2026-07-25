@@ -104,24 +104,7 @@ class PlannerDetailService {
             const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
             const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
-            const primaryIdxs = [
-              plannerNoIdx, poNoIdx, customerIdx, machineIdx, modelIdx, locationIdx, areaIdx,
-              startDateIdx, endDateIdx, plannedPmIdx, completedPmIdx, pendingPmIdx,
-              firstPmDoneIdx, secondPmDoneIdx, thirdPmDoneIdx, fourthPmDoneIdx,
-              remarksIdx, invoiceStatusIdx
-            ];
-
-            const historyLogs = [];
-            for (let j = 0; j < headers.length; j++) {
-              if (primaryIdxs.includes(j)) continue;
-              const headerName = rawRows[0][j];
-              if (headerName && (/\d{4}/.test(headerName) || /po|pm|breakdown|calibration/i.test(headerName))) {
-                historyLogs.push({
-                  title: headerName.toString().trim(),
-                  value: getVal(j)
-                });
-              }
-            }
+            const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
 
             return {
               plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
@@ -153,6 +136,7 @@ class PlannerDetailService {
                 calibration2025_2026: getVal(calibration2025_2026Idx),
                 secondPm2025_2026: getVal(secondPm2025_2026Idx),
                 breakdown2025_2026: getVal(breakdown2025_2026Idx),
+                logs: historyLogs,
               },
             };
           }
@@ -162,6 +146,61 @@ class PlannerDetailService {
 
     // Return null if row not found or keyfile missing
     return null;
+  }
+
+  static extractDynamicHistoryLogs(rawHeaders, rowData) {
+    const logs = [];
+    if (!rawHeaders || !rowData) return logs;
+
+    rawHeaders.forEach((h, idx) => {
+      if (!h) return;
+      const cleanH = h.toString().trim();
+      const lowerH = cleanH.toLowerCase();
+
+      // Skip current PO or basic details
+      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po') return;
+
+      const val = idx < rowData.length && rowData[idx] ? rowData[idx].toString().trim() : 'N/A';
+
+      // 1. Match Previous PO headers (e.g. Previous PO (2023-2024), Previous PO (2024-2025), Previous PO (2026-2027))
+      if (lowerH.includes('previous po') || lowerH.includes('prev po') || (lowerH.includes('po') && lowerH.includes('20'))) {
+        if (!lowerH.includes('current')) {
+          const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
+          const year = yearMatch ? yearMatch[0].replace(/\s+/g, '') : '';
+          logs.push({
+            title: cleanH,
+            value: val,
+            type: 'po',
+            year: year,
+          });
+        }
+      } 
+      // 2. Match Maintenance/PM/Breakdown/Calibration logs with year
+      else {
+        const isMaintenance = lowerH.includes('pm') || lowerH.includes('breakdown') || lowerH.includes('break down') || lowerH.includes('calibration');
+        const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
+
+        if (isMaintenance && yearMatch) {
+          if (!lowerH.includes('done date') && !lowerH.includes('start date') && !lowerH.includes('end date')) {
+            let type = 'pm';
+            if (lowerH.includes('breakdown') || lowerH.includes('break down')) {
+              type = 'breakdown';
+            } else if (lowerH.includes('calibration')) {
+              type = 'calibration';
+            }
+
+            logs.push({
+              title: cleanH,
+              value: val,
+              type: type,
+              year: yearMatch[0].replace(/\s+/g, ''),
+            });
+          }
+        }
+      }
+    });
+
+    return logs;
   }
 
   static async getAllPlanners() {
@@ -253,24 +292,7 @@ class PlannerDetailService {
           const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
           const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
-          const primaryIdxs = [
-            plannerNoIdx, poNoIdx, customerIdx, machineIdx, modelIdx, locationIdx, areaIdx,
-            startDateIdx, endDateIdx, plannedPmIdx, completedPmIdx, pendingPmIdx,
-            firstPmDoneIdx, secondPmDoneIdx, thirdPmDoneIdx, fourthPmDoneIdx,
-            remarksIdx, invoiceStatusIdx
-          ];
-
-          const historyLogs = [];
-          for (let j = 0; j < headers.length; j++) {
-            if (primaryIdxs.includes(j)) continue;
-            const headerName = rawRows[0][j];
-            if (headerName && (/\d{4}/.test(headerName) || /po|pm|breakdown|calibration/i.test(headerName))) {
-              historyLogs.push({
-                title: headerName.toString().trim(),
-                value: getVal(j)
-              });
-            }
-          }
+          const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
 
           planners.push({
             plannerNumber: plannerNo,
@@ -302,6 +324,7 @@ class PlannerDetailService {
               calibration2025_2026: getVal(calibration2025_2026Idx),
               secondPm2025_2026: getVal(secondPm2025_2026Idx),
               breakdown2025_2026: getVal(breakdown2025_2026Idx),
+              logs: historyLogs,
             },
           });
         }
