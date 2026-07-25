@@ -58,6 +58,7 @@ class PlannerDetailService {
       const fourthPmDoneIdx = findHeaderIndex(['fourth pm done date', 'fourth_pm_done_date', 'fourthpmdonedate']);
 
       const remarksIdx = findHeaderIndex(['remarks', 'remark', 'notes']);
+      const invoiceStatusIdx = findHeaderIndex(['invoice status', 'invoice_status', 'invoice status (2025-2026)']);
 
       // History Column Indices
       const prevPo2023_2024Idx = findHeaderIndex(['previous po (2023-2024)']);
@@ -120,6 +121,7 @@ class PlannerDetailService {
               thirdPmDate: getVal(thirdPmDoneIdx),
               fourthPmDate: getVal(fourthPmDoneIdx),
               remarks: getVal(remarksIdx),
+              invoiceStatus: getVal(invoiceStatusIdx),
               history: {
                 prevPo2023_2024: getVal(prevPo2023_2024Idx),
                 prevPo2024_2025: getVal(prevPo2024_2025Idx),
