@@ -152,57 +152,50 @@ class PlannerDetailService {
     const logs = [];
     if (!rawHeaders || !rowData) return logs;
 
-    let currentContextYear = '';
-
     rawHeaders.forEach((h, idx) => {
       if (!h) return;
       const cleanH = h.toString().trim();
       const lowerH = cleanH.toLowerCase();
 
-      // Skip current PO or basic details
-      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po') return;
-
       const val = idx < rowData.length && rowData[idx] ? rowData[idx].toString().trim() : 'N/A';
 
-      // 1. Match Previous PO headers (e.g. Previous PO (2023-2024), Previous PO (2024-2025), Previous PO (2026-2027))
-      if (lowerH.includes('previous po') || lowerH.includes('prev po') || (lowerH.includes('po') && lowerH.includes('20'))) {
-        if (!lowerH.includes('current')) {
-          const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
-          const year = yearMatch ? yearMatch[0].replace(/\s+/g, '') : '';
-          if (year) {
-            currentContextYear = year;
+      // 1. Match Previous PO headers (Must contain "previous po" or "prev po")
+      if (lowerH.includes('previous po') || lowerH.includes('prev po') || lowerH.includes('prev. po')) {
+        const yearMatch = cleanH.match(/\b(20\d{2})\s*[-–\u2013]\s*(\d{2,4})\b/) || cleanH.match(/\b(20\d{2})\b/);
+        const year = yearMatch ? yearMatch[0].replace(/\s+/g, '') : '';
+        logs.push({
+          title: cleanH,
+          value: val,
+          type: 'po',
+          year: year,
+        });
+      } 
+      // 2. Match Maintenance/PM/Breakdown/Calibration logs (Must have explicit PM/Breakdown/Calibration term AND a year range like 2024-2025)
+      else {
+        const hasMaintenanceType = lowerH.includes('first pm') ||
+                                   lowerH.includes('second pm') ||
+                                   lowerH.includes('third pm') ||
+                                   lowerH.includes('fourth pm') ||
+                                   lowerH.includes('breakdown') ||
+                                   lowerH.includes('break down') ||
+                                   lowerH.includes('calibration');
+
+        const yearRangeMatch = cleanH.match(/\b(20\d{2})\s*[-–\u2013]\s*(\d{2,4})\b/);
+
+        if (hasMaintenanceType && yearRangeMatch) {
+          let type = 'pm';
+          if (lowerH.includes('breakdown') || lowerH.includes('break down')) {
+            type = 'breakdown';
+          } else if (lowerH.includes('calibration')) {
+            type = 'calibration';
           }
+
           logs.push({
             title: cleanH,
             value: val,
-            type: 'po',
-            year: year,
+            type: type,
+            year: yearRangeMatch[0].replace(/\s+/g, ''),
           });
-        }
-      } 
-      // 2. Match Maintenance/PM/Breakdown/Calibration logs
-      else {
-        const isMaintenance = lowerH.includes('pm') || lowerH.includes('breakdown') || lowerH.includes('break down') || lowerH.includes('calibration');
-        const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
-
-        if (isMaintenance) {
-          if (!lowerH.includes('done date') && !lowerH.includes('start date') && !lowerH.includes('end date')) {
-            let type = 'pm';
-            if (lowerH.includes('breakdown') || lowerH.includes('break down')) {
-              type = 'breakdown';
-            } else if (lowerH.includes('calibration')) {
-              type = 'calibration';
-            }
-
-            const itemYear = yearMatch ? yearMatch[0].replace(/\s+/g, '') : currentContextYear;
-
-            logs.push({
-              title: cleanH,
-              value: val,
-              type: type,
-              year: itemYear,
-            });
-          }
         }
       }
     });
