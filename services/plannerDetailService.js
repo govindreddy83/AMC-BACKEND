@@ -49,6 +49,14 @@ class PlannerDetailService {
       let endDateIdx = findHeaderIndex(['enddate', 'end_date', 'end date', 'to', 'amc end date']);
 
       const plannedPmIdx = findHeaderIndex(['plannedpm', 'planned_pm', 'planned pm', 'no of pms', 'no_of_pms']);
+      const completedPmIdx = findHeaderIndex(['completed pm', 'completedpm', 'completed_pm']);
+      const pendingPmIdx = findHeaderIndex(['pending pm', 'pendingpm', 'pending_pm']);
+      
+      const firstPmDoneIdx = findHeaderIndex(['first pm done date', 'first_pm_done_date', 'firstpmdonedate']);
+      const secondPmDoneIdx = findHeaderIndex(['second pm done date', 'second_pm_done_date', 'secondpmdonedate']);
+      const thirdPmDoneIdx = findHeaderIndex(['third pm done date', 'third_pm_done_date', 'thirdpmdonedate', 'thirtd pm done date']);
+      const fourthPmDoneIdx = findHeaderIndex(['fourth pm done date', 'fourth_pm_done_date', 'fourthpmdonedate']);
+
       const remarksIdx = findHeaderIndex(['remarks', 'remark', 'notes', 'invoice status', 'invoice_status', 'invoice status (2025-2026)']);
 
       // History Column Indices
@@ -87,17 +95,13 @@ class PlannerDetailService {
               machineName += ` (${modelVal})`;
             }
 
-            const pmDates = [];
-            for (let col = 18; col < rawRows[i].length; col++) {
-              const val = rawRows[i][col] ? rawRows[i][col].toString().trim() : '';
-              if (val && !val.toLowerCase().includes('installed') && !val.toLowerCase().includes('install')) {
-                pmDates.push(val);
-              }
-            }
+            const plannedPmVal = getVal(plannedPmIdx);
+            const completedPmVal = getVal(completedPmIdx);
+            const pendingPmVal = getVal(pendingPmIdx);
 
-            const plannedPmCount = parseInt(getVal(plannedPmIdx)) || 2;
-            const completedPmCount = pmDates.length;
-            const pendingPmCount = Math.max(0, plannedPmCount - completedPmCount);
+            const plannedPmCount = plannedPmVal !== 'N/A' ? plannedPmVal.toString().padStart(2, '0') : 'N/A';
+            const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
+            const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
             return {
               plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
@@ -108,13 +112,13 @@ class PlannerDetailService {
               area: getVal(areaIdx),
               startDate: getVal(startDateIdx),
               endDate: getVal(endDateIdx),
-              plannedPm: plannedPmCount.toString().padStart(2, '0'),
-              completedPm: completedPmCount.toString().padStart(2, '0'),
-              pendingPm: pendingPmCount.toString().padStart(2, '0'),
-              firstPmDate: pmDates[0] || 'N/A',
-              secondPmDate: pmDates[1] || 'N/A',
-              thirdPmDate: pmDates[2] || 'N/A',
-              fourthPmDate: pmDates[3] || 'N/A',
+              plannedPm: plannedPmCount,
+              completedPm: completedPmCount,
+              pendingPm: pendingPmCount,
+              firstPmDate: getVal(firstPmDoneIdx),
+              secondPmDate: getVal(secondPmDoneIdx),
+              thirdPmDate: getVal(thirdPmDoneIdx),
+              fourthPmDate: getVal(fourthPmDoneIdx),
               remarks: getVal(remarksIdx),
               history: {
                 prevPo2023_2024: getVal(prevPo2023_2024Idx),
