@@ -32,8 +32,16 @@ class AreasService {
       );
 
       if (areaColumnIndex !== -1) {
-        // Start from index 2 since index 0 and 1 are headers
-        for (let i = 2; i < rawRows.length; i++) {
+        // Dynamically detect header offset (startIdx = 1 for 1 header row, 2 for spanned 2-header rows)
+        let startIdx = 1;
+        if (rawRows.length > 1) {
+          const row1Val = rawRows[1][areaColumnIndex] ? rawRows[1][areaColumnIndex].toString().toLowerCase().trim() : '';
+          if (row1Val === 'block details' || row1Val === 'area' || row1Val === 'to' || row1Val === 'from') {
+            startIdx = 2;
+          }
+        }
+
+        for (let i = startIdx; i < rawRows.length; i++) {
           const val = rawRows[i][areaColumnIndex];
           if (val && val.trim().length > 0) {
             const cleanVal = val.trim();
@@ -45,7 +53,7 @@ class AreasService {
         }
       } else {
         // If no explicit header, scan all rows/cells for area values
-        for (let i = 2; i < rawRows.length; i++) {
+        for (let i = 1; i < rawRows.length; i++) {
           const row = rawRows[i];
           for (const cell of row) {
             if (cell && typeof cell === 'string' && cell.trim().length > 0) {

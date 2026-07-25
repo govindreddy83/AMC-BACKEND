@@ -41,8 +41,16 @@ class PlannersService {
       );
 
       if (areaIndex !== -1 && plannerNoIndex !== -1) {
-        // Start from index 2 since index 0 and 1 are headers
-        for (let i = 2; i < rawRows.length; i++) {
+        // Dynamically detect header offset (startIdx = 1 for 1 header row, 2 for spanned 2-header rows)
+        let startIdx = 1;
+        if (rawRows.length > 1) {
+          const row1Val = rawRows[1][areaIndex] ? rawRows[1][areaIndex].toString().toLowerCase().trim() : '';
+          if (row1Val === 'block details' || row1Val === 'area' || row1Val === 'to' || row1Val === 'from') {
+            startIdx = 2;
+          }
+        }
+
+        for (let i = startIdx; i < rawRows.length; i++) {
           const rowArea = rawRows[i][areaIndex]
             ? rawRows[i][areaIndex].toString().trim().toUpperCase()
             : '';

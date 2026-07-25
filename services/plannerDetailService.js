@@ -50,8 +50,16 @@ class PlannerDetailService {
       const remarksIdx = findHeaderIndex(['remarks', 'remark', 'notes', 'invoice status', 'invoice_status']);
 
       if (plannerNoIdx !== -1) {
-        // Start from index 2 since index 0 and 1 are headers
-        for (let i = 2; i < rawRows.length; i++) {
+        // Dynamically detect header offset (startIdx = 1 for 1 header row, 2 for spanned 2-header rows)
+        let startIdx = 1;
+        if (rawRows.length > 1) {
+          const row1Val = rawRows[1][plannerNoIdx] ? rawRows[1][plannerNoIdx].toString().toLowerCase().trim() : '';
+          if (row1Val === 'plannerno' || row1Val === 'planner_no' || row1Val === 'code' || row1Val === 'planner no' || row1Val === 'equipment id') {
+            startIdx = 2;
+          }
+        }
+
+        for (let i = startIdx; i < rawRows.length; i++) {
           const cellVal = rawRows[i][plannerNoIdx]
             ? rawRows[i][plannerNoIdx].toString().trim().toUpperCase()
             : '';
