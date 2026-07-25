@@ -154,11 +154,11 @@ class PlannerDetailService {
 
     rawHeaders.forEach((h, idx) => {
       if (!h) return;
-      const cleanH = h.toString().trim();
+      const cleanH = h.toString().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
       const lowerH = cleanH.toLowerCase();
 
       // Skip current PO or basic details
-      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po') return;
+      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po' || lowerH.startsWith('current po')) return;
 
       const val = idx < rowData.length && rowData[idx] ? rowData[idx].toString().trim() : 'N/A';
 
