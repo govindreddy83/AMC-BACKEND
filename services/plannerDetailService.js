@@ -42,7 +42,8 @@ class PlannerDetailService {
       const customerIdx = findHeaderIndex(['customername', 'customer_name', 'customer', 'customer name', 'vendor']);
       const machineIdx = findHeaderIndex(['machinename', 'machine_name', 'machine', 'machine name', 'equipment details', 'equipment_details', 'equipment name']);
       const modelIdx = findHeaderIndex(['model']);
-      const locationIdx = findHeaderIndex(['location', 'site', 'area', 'block details', 'block_details']);
+      const locationIdx = findHeaderIndex(['location', 'site']);
+      const areaIdx = findHeaderIndex(['area', 'block details', 'block_details']);
       
       let startDateIdx = findHeaderIndex(['startdate', 'start_date', 'start date', 'from', 'amc start date']);
       let endDateIdx = findHeaderIndex(['enddate', 'end_date', 'end date', 'to', 'amc end date']);
@@ -104,6 +105,7 @@ class PlannerDetailService {
               customerName: getVal(customerIdx),
               machineName: machineName,
               location: getVal(locationIdx),
+              area: getVal(areaIdx),
               startDate: getVal(startDateIdx),
               endDate: getVal(endDateIdx),
               plannedPm: plannedPmCount.toString().padStart(2, '0'),
