@@ -39,6 +39,7 @@ class PlannerDetailService {
 
       const plannerNoIdx = findHeaderIndex(['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id']);
       const poNoIdx = findHeaderIndex(['ponumber', 'po_number', 'po_no', 'po no', 'current po', 'current_po (2025-2026)']);
+      const poLinkIdx = findHeaderIndex(['po link', 'po_link', 'pdf link', 'pdf_link', 'po pdf', 'popdf', 'po url', 'po doc', 'po document', 'pdf_url', 'pdf url']);
       const customerIdx = findHeaderIndex(['customername', 'customer_name', 'customer', 'customer name', 'vendor']);
       const machineIdx = findHeaderIndex(['machinename', 'machine_name', 'machine', 'machine name', 'equipment details', 'equipment_details', 'equipment name']);
       const modelIdx = findHeaderIndex(['model']);
@@ -106,9 +107,20 @@ class PlannerDetailService {
 
             const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
 
+            const poNoVal = getVal(poNoIdx);
+            let poLinkVal = getVal(poLinkIdx);
+            if (poLinkVal === 'N/A' || !poLinkVal) {
+              if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
+                poLinkVal = poNoVal;
+              } else {
+                poLinkVal = '';
+              }
+            }
+
             return {
               plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
-              poNumber: getVal(poNoIdx),
+              poNumber: poNoVal,
+              poLink: poLinkVal,
               customerName: getVal(customerIdx),
               machineName: machineName,
               location: getVal(locationIdx),
@@ -229,6 +241,7 @@ class PlannerDetailService {
 
       const plannerNoIdx = findHeaderIndex(['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id']);
       const poNoIdx = findHeaderIndex(['ponumber', 'po_number', 'po_no', 'po no', 'current po', 'current_po (2025-2026)']);
+      const poLinkIdx = findHeaderIndex(['po link', 'po_link', 'pdf link', 'pdf_link', 'po pdf', 'popdf', 'po url', 'po doc', 'po document', 'pdf_url', 'pdf url']);
       const customerIdx = findHeaderIndex(['customername', 'customer_name', 'customer', 'customer name', 'vendor']);
       const machineIdx = findHeaderIndex(['machinename', 'machine_name', 'machine', 'machine name', 'equipment details', 'equipment_details', 'equipment name']);
       const modelIdx = findHeaderIndex(['model']);
@@ -294,9 +307,20 @@ class PlannerDetailService {
 
           const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
 
+          const poNoVal = getVal(poNoIdx);
+          let poLinkVal = getVal(poLinkIdx);
+          if (poLinkVal === 'N/A' || !poLinkVal) {
+            if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
+              poLinkVal = poNoVal;
+            } else {
+              poLinkVal = '';
+            }
+          }
+
           planners.push({
             plannerNumber: plannerNo,
-            poNumber: getVal(poNoIdx),
+            poNumber: poNoVal,
+            poLink: poLinkVal,
             customerName: getVal(customerIdx),
             machineName: machineName,
             location: getVal(locationIdx),
