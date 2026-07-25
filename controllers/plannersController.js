@@ -1,9 +1,23 @@
 const PlannersService = require('../services/plannersService');
+const PlannerDetailService = require('../services/plannerDetailService');
 
 /**
  * Controller handling Planners endpoints.
  */
 class PlannersController {
+  /**
+   * GET /api/planners/all
+   * Returns array of all complete planner objects
+   */
+  static async getAllPlanners(req, res, next) {
+    try {
+      const planners = await PlannerDetailService.getAllPlanners();
+      return res.status(200).json(planners);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   /**
    * GET /api/planners?area=P1
    * Returns array of [{ plannerNo: "P1/WEB/001" }, ...]
