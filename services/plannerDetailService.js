@@ -152,13 +152,15 @@ class PlannerDetailService {
     const logs = [];
     if (!rawHeaders || !rowData) return logs;
 
+    let currentContextYear = '';
+
     rawHeaders.forEach((h, idx) => {
       if (!h) return;
-      const cleanH = h.toString().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+      const cleanH = h.toString().trim();
       const lowerH = cleanH.toLowerCase();
 
       // Skip current PO or basic details
-      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po' || lowerH.startsWith('current po')) return;
+      if (lowerH === 'ponumber' || lowerH === 'po_number' || lowerH === 'po_no' || lowerH === 'po no' || lowerH === 'current po') return;
 
       const val = idx < rowData.length && rowData[idx] ? rowData[idx].toString().trim() : 'N/A';
 
@@ -167,6 +169,9 @@ class PlannerDetailService {
         if (!lowerH.includes('current')) {
           const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
           const year = yearMatch ? yearMatch[0].replace(/\s+/g, '') : '';
+          if (year) {
+            currentContextYear = year;
+          }
           logs.push({
             title: cleanH,
             value: val,
@@ -175,12 +180,12 @@ class PlannerDetailService {
           });
         }
       } 
-      // 2. Match Maintenance/PM/Breakdown/Calibration logs with year
+      // 2. Match Maintenance/PM/Breakdown/Calibration logs
       else {
         const isMaintenance = lowerH.includes('pm') || lowerH.includes('breakdown') || lowerH.includes('break down') || lowerH.includes('calibration');
         const yearMatch = cleanH.match(/\d{4}\s*[-–\u2013]\s*\d{4}/) || cleanH.match(/\d{4}/);
 
-        if (isMaintenance && yearMatch) {
+        if (isMaintenance) {
           if (!lowerH.includes('done date') && !lowerH.includes('start date') && !lowerH.includes('end date')) {
             let type = 'pm';
             if (lowerH.includes('breakdown') || lowerH.includes('break down')) {
@@ -189,11 +194,13 @@ class PlannerDetailService {
               type = 'calibration';
             }
 
+            const itemYear = yearMatch ? yearMatch[0].replace(/\s+/g, '') : currentContextYear;
+
             logs.push({
               title: cleanH,
               value: val,
               type: type,
-              year: yearMatch[0].replace(/\s+/g, ''),
+              year: itemYear,
             });
           }
         }
