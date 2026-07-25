@@ -104,6 +104,25 @@ class PlannerDetailService {
             const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
             const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
+            const primaryIdxs = [
+              plannerNoIdx, poNoIdx, customerIdx, machineIdx, modelIdx, locationIdx, areaIdx,
+              startDateIdx, endDateIdx, plannedPmIdx, completedPmIdx, pendingPmIdx,
+              firstPmDoneIdx, secondPmDoneIdx, thirdPmDoneIdx, fourthPmDoneIdx,
+              remarksIdx, invoiceStatusIdx
+            ];
+
+            const historyLogs = [];
+            for (let j = 0; j < headers.length; j++) {
+              if (primaryIdxs.includes(j)) continue;
+              const headerName = rawRows[0][j];
+              if (headerName && (/\d{4}/.test(headerName) || /po|pm|breakdown|calibration/i.test(headerName))) {
+                historyLogs.push({
+                  title: headerName.toString().trim(),
+                  value: getVal(j)
+                });
+              }
+            }
+
             return {
               plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
               poNumber: getVal(poNoIdx),
@@ -122,6 +141,7 @@ class PlannerDetailService {
               fourthPmDate: getVal(fourthPmDoneIdx),
               remarks: getVal(remarksIdx),
               invoiceStatus: getVal(invoiceStatusIdx),
+              historyLogs: historyLogs,
               history: {
                 prevPo2023_2024: getVal(prevPo2023_2024Idx),
                 prevPo2024_2025: getVal(prevPo2024_2025Idx),
@@ -233,6 +253,25 @@ class PlannerDetailService {
           const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
           const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
+          const primaryIdxs = [
+            plannerNoIdx, poNoIdx, customerIdx, machineIdx, modelIdx, locationIdx, areaIdx,
+            startDateIdx, endDateIdx, plannedPmIdx, completedPmIdx, pendingPmIdx,
+            firstPmDoneIdx, secondPmDoneIdx, thirdPmDoneIdx, fourthPmDoneIdx,
+            remarksIdx, invoiceStatusIdx
+          ];
+
+          const historyLogs = [];
+          for (let j = 0; j < headers.length; j++) {
+            if (primaryIdxs.includes(j)) continue;
+            const headerName = rawRows[0][j];
+            if (headerName && (/\d{4}/.test(headerName) || /po|pm|breakdown|calibration/i.test(headerName))) {
+              historyLogs.push({
+                title: headerName.toString().trim(),
+                value: getVal(j)
+              });
+            }
+          }
+
           planners.push({
             plannerNumber: plannerNo,
             poNumber: getVal(poNoIdx),
@@ -251,6 +290,7 @@ class PlannerDetailService {
             fourthPmDate: getVal(fourthPmDoneIdx),
             remarks: getVal(remarksIdx),
             invoiceStatus: getVal(invoiceStatusIdx),
+            historyLogs: historyLogs,
             history: {
               prevPo2023_2024: getVal(prevPo2023_2024Idx),
               prevPo2024_2025: getVal(prevPo2024_2025Idx),
