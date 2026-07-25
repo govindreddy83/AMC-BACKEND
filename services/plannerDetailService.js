@@ -18,39 +18,51 @@ class PlannerDetailService {
     let rawRows = [];
 
     try {
-      rawRows = await GoogleSheetsService.readRawData('Planner!A1:Z500');
+      rawRows = await GoogleSheetsService.readRawData('Planner!A1:AZ500');
     } catch (error) {
       // Fallback to Sheet1 if Planner sheet tab doesn't exist
       try {
-        rawRows = await GoogleSheetsService.readRawData('Sheet1!A1:Z500');
+        rawRows = await GoogleSheetsService.readRawData('Sheet1!A1:AZ500');
       } catch (fallbackError) {
         console.warn('⚠️ Could not fetch from Sheet1:', fallbackError.message);
       }
     }
 
     if (rawRows && rawRows.length > 1) {
-      const headers = rawRows[0].map((cell) => cell.toString().toLowerCase().trim());
-      
-      const findHeaderIndex = (possibleNames) =>
-        headers.findIndex((h) => possibleNames.includes(h));
+      const cleanHeader = (h) => h ? h.toString().toLowerCase().replace(/[\r\n\s]+/g, ' ').trim() : '';
+      const headers = rawRows[0].map(cleanHeader);
+
+      const findHeaderIndex = (possibleNames) => {
+        const normalizedTargets = possibleNames.map(cleanHeader);
+        return headers.findIndex((h) => normalizedTargets.includes(h));
+      };
 
       const plannerNoIdx = findHeaderIndex(['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id']);
-      const poNoIdx = findHeaderIndex(['ponumber', 'po_number', 'po_no', 'po no', 'current po', 'current_po']);
+      const poNoIdx = findHeaderIndex(['ponumber', 'po_number', 'po_no', 'po no', 'current po', 'current_po (2025-2026)']);
       const customerIdx = findHeaderIndex(['customername', 'customer_name', 'customer', 'customer name', 'vendor']);
-      const machineIdx = findHeaderIndex(['machinename', 'machine_name', 'machine', 'machine name', 'equipment details', 'equipment_details']);
+      const machineIdx = findHeaderIndex(['machinename', 'machine_name', 'machine', 'machine name', 'equipment details', 'equipment_details', 'equipment name']);
       const modelIdx = findHeaderIndex(['model']);
       const locationIdx = findHeaderIndex(['location', 'site', 'area', 'block details', 'block_details']);
       
-      let startDateIdx = findHeaderIndex(['startdate', 'start_date', 'start date', 'from']);
-      let endDateIdx = findHeaderIndex(['enddate', 'end_date', 'end date', 'to']);
-      if (startDateIdx === -1 && headers[8] === 'amc period') startDateIdx = 8;
-      if (endDateIdx === -1 && headers[9] === '') endDateIdx = 9;
+      let startDateIdx = findHeaderIndex(['startdate', 'start_date', 'start date', 'from', 'amc start date']);
+      let endDateIdx = findHeaderIndex(['enddate', 'end_date', 'end date', 'to', 'amc end date']);
 
       const plannedPmIdx = findHeaderIndex(['plannedpm', 'planned_pm', 'planned pm', 'no of pms', 'no_of_pms']);
-      const remarksIdx = findHeaderIndex(['remarks', 'remark', 'notes', 'invoice status', 'invoice_status']);
+      const remarksIdx = findHeaderIndex(['remarks', 'remark', 'notes', 'invoice status', 'invoice_status', 'invoice status (2025-2026)']);
+
+      // History Column Indices
+      const prevPo2023_2024Idx = findHeaderIndex(['previous po (2023-2024)']);
+      const prevPo2024_2025Idx = findHeaderIndex(['previous po (2024-2025)']);
+      const firstPm2024_2025Idx = findHeaderIndex(['first pm 2024-2025']);
+      const secondPm2024_2025Idx = findHeaderIndex(['second pm 2024-2025']);
+      const breakdown2024_2025Idx = findHeaderIndex(['break down 2024-2025', 'breakdown 2024-2025']);
+      const calibration2024_2025Idx = findHeaderIndex(['calibration 2024-2025']);
+      const firstPm2025_2026Idx = findHeaderIndex(['first pm 2025-2026']);
+      const calibration2025_2026Idx = findHeaderIndex(['calibration 2025-2026']);
+      const secondPm2025_2026Idx = findHeaderIndex(['second pm 2025-2026']);
+      const breakdown2025_2026Idx = findHeaderIndex(['breakdown 2025-2026', 'break down 2025-2026']);
 
       if (plannerNoIdx !== -1) {
-        // Dynamically detect header offset (startIdx = 1 for 1 header row, 2 for spanned 2-header rows)
         let startIdx = 1;
         if (rawRows.length > 1) {
           const row1Val = rawRows[1][plannerNoIdx] ? rawRows[1][plannerNoIdx].toString().toLowerCase().trim() : '';
@@ -65,16 +77,15 @@ class PlannerDetailService {
             : '';
 
           if (cellVal === targetNo) {
-            const getVal = (idx) => (idx !== -1 && rawRows[i][idx] ? rawRows[i][idx].toString().trim() : '');
+            const getVal = (idx) => (idx !== -1 && rawRows[i][idx] ? rawRows[i][idx].toString().trim() : 'N/A');
 
-            // Construct Machine Name combining Equipment Details and Model
-            let machineName = getVal(machineIdx) || 'Centrifuge';
+            let machineName = getVal(machineIdx);
+            if (machineName === 'N/A') machineName = 'Centrifuge';
             const modelVal = getVal(modelIdx);
-            if (modelVal) {
+            if (modelVal && modelVal !== 'N/A') {
               machineName += ` (${modelVal})`;
             }
 
-            // Extract PM dates starting from column index 18 onwards
             const pmDates = [];
             for (let col = 18; col < rawRows[i].length; col++) {
               const val = rawRows[i][col] ? rawRows[i][col].toString().trim() : '';
@@ -89,12 +100,12 @@ class PlannerDetailService {
 
             return {
               plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
-              poNumber: getVal(poNoIdx) || 'N/A',
-              customerName: getVal(customerIdx) || 'N/A',
+              poNumber: getVal(poNoIdx),
+              customerName: getVal(customerIdx),
               machineName: machineName,
-              location: getVal(locationIdx) || 'N/A',
-              startDate: getVal(startDateIdx) || 'N/A',
-              endDate: getVal(endDateIdx) || 'N/A',
+              location: getVal(locationIdx),
+              startDate: getVal(startDateIdx),
+              endDate: getVal(endDateIdx),
               plannedPm: plannedPmCount.toString().padStart(2, '0'),
               completedPm: completedPmCount.toString().padStart(2, '0'),
               pendingPm: pendingPmCount.toString().padStart(2, '0'),
@@ -102,7 +113,19 @@ class PlannerDetailService {
               secondPmDate: pmDates[1] || 'N/A',
               thirdPmDate: pmDates[2] || 'N/A',
               fourthPmDate: pmDates[3] || 'N/A',
-              remarks: getVal(remarksIdx) || 'N/A',
+              remarks: getVal(remarksIdx),
+              history: {
+                prevPo2023_2024: getVal(prevPo2023_2024Idx),
+                prevPo2024_2025: getVal(prevPo2024_2025Idx),
+                firstPm2024_2025: getVal(firstPm2024_2025Idx),
+                secondPm2024_2025: getVal(secondPm2024_2025Idx),
+                breakdown2024_2025: getVal(breakdown2024_2025Idx),
+                calibration2024_2025: getVal(calibration2024_2025Idx),
+                firstPm2025_2026: getVal(firstPm2025_2026Idx),
+                calibration2025_2026: getVal(calibration2025_2026Idx),
+                secondPm2025_2026: getVal(secondPm2025_2026Idx),
+                breakdown2025_2026: getVal(breakdown2025_2026Idx),
+              },
             };
           }
         }
