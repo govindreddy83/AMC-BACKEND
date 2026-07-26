@@ -71,6 +71,55 @@ class GoogleSheetsService {
 
     return response.data;
   }
+
+  /**
+   * Automatically checks if a sheet tab exists, and if not, creates it programmatically.
+   * @param {string} tabName name of the tab to check/create (e.g. "PDF_Mappings")
+   */
+  static async ensureTabExists(tabName) {
+    const { sheets, sheetId, keyFileExists } = getGoogleSheetsClient();
+    if (!keyFileExists) return;
+
+    try {
+      const response = await sheets.spreadsheets.get({
+        spreadsheetId: sheetId,
+      });
+      const sheetsList = response.data.sheets || [];
+      const exists = sheetsList.some((s) => s.properties.title === tabName);
+
+      if (!exists) {
+        console.log(`Creating missing sheet tab: ${tabName}`);
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: sheetId,
+          resource: {
+            requests: [
+              {
+                addSheet: {
+                  properties: {
+                    title: tabName,
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        // Add headers for PDF_Mappings
+        if (tabName === 'PDF_Mappings') {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range: 'PDF_Mappings!A1:D1',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+              values: [['Equipment ID', 'Category', 'PDF URL', 'Timestamp']],
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.warn(`Error ensuring sheet tab "${tabName}" exists:`, err.message);
+    }
+  }
 }
 
 module.exports = GoogleSheetsService;

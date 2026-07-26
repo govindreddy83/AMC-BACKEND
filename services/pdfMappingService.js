@@ -29,9 +29,12 @@ class PdfMappingService {
     let mappings = this.getLocalMappings();
 
     try {
+      await GoogleSheetsService.ensureTabExists('PDF_Mappings');
       const rows = await GoogleSheetsService.readRawData('PDF_Mappings!A1:C500');
       if (rows && rows.length > 0) {
-        rows.forEach((row) => {
+        // Skip header row
+        const dataRows = rows[0][0] === 'Equipment ID' ? rows.slice(1) : rows;
+        dataRows.forEach((row) => {
           if (row.length >= 3) {
             const eqId = (row[0] || '').toString().trim().toUpperCase();
             const category = (row[1] || '').toString().trim();
@@ -45,7 +48,7 @@ class PdfMappingService {
         this.saveLocalMappings(mappings);
       }
     } catch (sheetsErr) {
-      // PDF_Mappings tab might not exist yet, fallback gracefully
+      console.warn('Could not fetch mappings from Google Sheets:', sheetsErr.message);
     }
 
     return mappings;
@@ -62,6 +65,7 @@ class PdfMappingService {
     this.saveLocalMappings(mappings);
 
     try {
+      await GoogleSheetsService.ensureTabExists('PDF_Mappings');
       await GoogleSheetsService.appendData('PDF_Mappings!A:C', [
         [cleanId, cleanCategory, cleanUrl, new Date().toISOString()],
       ]);
