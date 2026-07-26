@@ -85,6 +85,48 @@ class PlannersService {
       plannerNo: code,
     }));
   }
+
+  /**
+   * Get all unique planner codes / equipment IDs across all sheets
+   * @returns {Promise<Array<string>>}
+   */
+  static async getAllPlannerCodes() {
+    let rawRows = [];
+    try {
+      rawRows = await GoogleSheetsService.readRawData('Planner!A1:Z500');
+    } catch (error) {
+      try {
+        rawRows = await GoogleSheetsService.readRawData('Sheet1!A1:Z500');
+      } catch (fallbackError) {
+        console.warn('⚠️ Could not fetch from Sheet1:', fallbackError.message);
+      }
+    }
+
+    const codesSet = new Set();
+    if (rawRows && rawRows.length > 0) {
+      const headers = rawRows[0].map((cell) => cell.toString().toLowerCase().trim());
+      const plannerNoIndex = headers.findIndex((h) =>
+        ['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id'].includes(h)
+      );
+
+      if (plannerNoIndex !== -1) {
+        let startIdx = 1;
+        if (rawRows.length > 1) {
+          const row1Val = rawRows[1][plannerNoIndex] ? rawRows[1][plannerNoIndex].toString().toLowerCase().trim() : '';
+          if (row1Val === 'plannerno' || row1Val === 'planner_no' || row1Val === 'code' || row1Val === 'planner no' || row1Val === 'equipment id') {
+            startIdx = 2;
+          }
+        }
+        for (let i = startIdx; i < rawRows.length; i++) {
+          const codeVal = rawRows[i][plannerNoIndex] ? rawRows[i][plannerNoIndex].toString().trim() : '';
+          if (codeVal) {
+            codesSet.add(codeVal);
+          }
+        }
+      }
+    }
+    return Array.from(codesSet);
+  }
 }
 
 module.exports = PlannersService;

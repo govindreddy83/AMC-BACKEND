@@ -19,6 +19,19 @@ class PlannersController {
   }
 
   /**
+   * GET /api/planners/codes
+   * Returns array of unique equipment codes/IDs
+   */
+  static async getAllCodes(req, res, next) {
+    try {
+      const codes = await PlannersService.getAllPlannerCodes();
+      return res.status(200).json({ success: true, codes });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * GET /api/planners?area=P1
    * Returns array of [{ plannerNo: "P1/WEB/001" }, ...]
    */

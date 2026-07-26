@@ -4,6 +4,7 @@ const sheetsRoutes = require('./sheetsRoutes');
 const areasRoutes = require('./areasRoutes');
 const plannersRoutes = require('./plannersRoutes');
 const plannerDetailRoutes = require('./plannerDetailRoutes');
+const uploadRoutes = require('./uploadRoutes');
 const diagnosticController = require('../controllers/diagnosticController');
 
 // API Healthcheck route
@@ -23,5 +24,6 @@ router.use('/sheets', sheetsRoutes);
 router.use('/areas', areasRoutes);
 router.use('/planners', plannersRoutes);
 router.use('/planner', plannerDetailRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router;

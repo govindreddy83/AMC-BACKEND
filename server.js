@@ -17,22 +17,33 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // Root Status Route
 app.get('/', (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'Welcome to AMC Planner Google Sheets Integration Backend API',
     version: '1.0.0',
+    adminPortal: 'http://localhost:5000/admin',
     authType: 'Service Account (GOOGLE_APPLICATION_CREDENTIALS)',
     sheetId: process.env.GOOGLE_SHEET_ID || 'Not set',
     endpoints: {
       health: '/api/health',
+      admin: '/admin',
       readSheetsJson: '/api/sheets/read?range=Sheet1!A1:Z100',
       readSheetsRaw: '/api/sheets/raw?range=Sheet1!A1:Z100',
       appendSheetsData: '/api/sheets/append',
     },
   });
 });
+
+// Serve Admin Web Portal
+const fs = require('fs');
+const path = require('path');
+const adminPath = fs.existsSync(path.join(__dirname, 'AMC Admin'))
+  ? path.join(__dirname, 'AMC Admin')
+  : path.join(__dirname, '../AMC Admin');
+app.use('/admin', express.static(adminPath));
 
 app.use('/api', apiRoutes);
 

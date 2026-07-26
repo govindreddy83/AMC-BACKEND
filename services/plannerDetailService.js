@@ -1,4 +1,29 @@
 const GoogleSheetsService = require('./googleSheetsService');
+const fs = require('fs');
+const path = require('path');
+
+function getPdfLinkForCategory(plannerNo, categoryName) {
+  try {
+    const mappingsPath = path.join(__dirname, '../config/pdf_mappings.json');
+    if (!fs.existsSync(mappingsPath)) return '';
+    const content = fs.readFileSync(mappingsPath, 'utf8');
+    const mappings = JSON.parse(content || '{}');
+    const pNo = (plannerNo || '').toString().trim().toUpperCase();
+    if (!mappings[pNo]) return '';
+    
+    if (mappings[pNo][categoryName]) return mappings[pNo][categoryName];
+    
+    const catLower = categoryName.toLowerCase().replace(/[\s\-_]+/g, '');
+    for (const [key, url] of Object.entries(mappings[pNo])) {
+      if (key.toLowerCase().replace(/[\s\-_]+/g, '') === catLower) {
+        return url;
+      }
+    }
+  } catch (err) {
+    // ignore
+  }
+  return '';
+}
 
 /**
  * Service for fetching complete AMC Planner details by Planner Number.
@@ -105,7 +130,8 @@ class PlannerDetailService {
             const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
             const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
-            const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
+            const currentPlannerNo = rawRows[i][plannerNoIdx] || plannerNo;
+            const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], currentPlannerNo);
 
             const poNoVal = getVal(poNoIdx);
             let poLinkVal = getVal(poLinkIdx);
@@ -113,12 +139,12 @@ class PlannerDetailService {
               if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
                 poLinkVal = poNoVal;
               } else {
-                poLinkVal = '';
+                poLinkVal = getPdfLinkForCategory(currentPlannerNo, 'Current PO') || getPdfLinkForCategory(currentPlannerNo, 'poLink');
               }
             }
 
             return {
-              plannerNumber: rawRows[i][plannerNoIdx] || plannerNo,
+              plannerNumber: currentPlannerNo,
               poNumber: poNoVal,
               poLink: poLinkVal,
               customerName: getVal(customerIdx),
@@ -131,9 +157,13 @@ class PlannerDetailService {
               completedPm: completedPmCount,
               pendingPm: pendingPmCount,
               firstPmDate: getVal(firstPmDoneIdx),
+              firstPmLink: getPdfLinkForCategory(currentPlannerNo, 'First PM Done Date'),
               secondPmDate: getVal(secondPmDoneIdx),
+              secondPmLink: getPdfLinkForCategory(currentPlannerNo, 'Second PM Done Date'),
               thirdPmDate: getVal(thirdPmDoneIdx),
+              thirdPmLink: getPdfLinkForCategory(currentPlannerNo, 'Third PM Done Date'),
               fourthPmDate: getVal(fourthPmDoneIdx),
+              fourthPmLink: getPdfLinkForCategory(currentPlannerNo, 'Fourth PM Done Date'),
               remarks: getVal(remarksIdx),
               invoiceStatus: getVal(invoiceStatusIdx),
               historyLogs: historyLogs,
@@ -160,7 +190,7 @@ class PlannerDetailService {
     return null;
   }
 
-  static extractDynamicHistoryLogs(rawHeaders, rowData) {
+  static extractDynamicHistoryLogs(rawHeaders, rowData, plannerNo = '') {
     const logs = [];
     if (!rawHeaders || !rowData) return logs;
 
@@ -180,6 +210,7 @@ class PlannerDetailService {
           value: val,
           type: 'po',
           year: year,
+          pdfLink: getPdfLinkForCategory(plannerNo, cleanH),
         });
       } 
       // 2. Match Maintenance/PM/Breakdown/Calibration logs (Must have explicit PM/Breakdown/Calibration term AND a year range like 2024-2025)
@@ -207,6 +238,7 @@ class PlannerDetailService {
             value: val,
             type: type,
             year: yearRangeMatch[0].replace(/\s+/g, ''),
+            pdfLink: getPdfLinkForCategory(plannerNo, cleanH),
           });
         }
       }
@@ -305,7 +337,7 @@ class PlannerDetailService {
           const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
           const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
-          const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i]);
+          const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], plannerNo);
 
           const poNoVal = getVal(poNoIdx);
           let poLinkVal = getVal(poLinkIdx);
@@ -313,7 +345,7 @@ class PlannerDetailService {
             if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
               poLinkVal = poNoVal;
             } else {
-              poLinkVal = '';
+              poLinkVal = getPdfLinkForCategory(plannerNo, 'Current PO') || getPdfLinkForCategory(plannerNo, 'poLink');
             }
           }
 
@@ -331,9 +363,13 @@ class PlannerDetailService {
             completedPm: completedPmCount,
             pendingPm: pendingPmCount,
             firstPmDate: getVal(firstPmDoneIdx),
+            firstPmLink: getPdfLinkForCategory(plannerNo, 'First PM Done Date'),
             secondPmDate: getVal(secondPmDoneIdx),
+            secondPmLink: getPdfLinkForCategory(plannerNo, 'Second PM Done Date'),
             thirdPmDate: getVal(thirdPmDoneIdx),
+            thirdPmLink: getPdfLinkForCategory(plannerNo, 'Third PM Done Date'),
             fourthPmDate: getVal(fourthPmDoneIdx),
+            fourthPmLink: getPdfLinkForCategory(plannerNo, 'Fourth PM Done Date'),
             remarks: getVal(remarksIdx),
             invoiceStatus: getVal(invoiceStatusIdx),
             historyLogs: historyLogs,

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMC Planner - Admin PDF Upload Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #c62828;
+      --primary-hover: #b71c1c;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #4ade80;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      padding: 1.5rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ef4444;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent-blue);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .file-dropzone {
+      border: 2px dashed rgba(56, 189, 248, 0.4);
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .file-dropzone:hover {
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-msg {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      display: none;
+      font-weight: 600;
+    }
+
+    .status-msg.success {
+      display: block;
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .status-msg.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+    }
+
+    /* Mappings Table */
+    .mappings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .mappings-table th, .mappings-table td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .mappings-table th {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    .link-btn {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .link-btn:hover {
+      text-decoration: underline;
+    }
+
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-delete:hover {
+      background: #ef4444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📄 AMC PLANNER ADMIN PORTAL</h1>
+      <p>Upload & Map Cloudinary PDF Documents to Equipment POs, PM Dates & Maintenance Logs</p>
+    </div>
+
+    <!-- Upload Form Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>📤</span> Upload New PDF Document
+      </div>
+
+      <form id="uploadForm" class="form-grid">
+        <!-- Equipment ID / Code -->
+        <div class="form-group">
+          <label for="equipmentId">Equipment ID / Planner No</label>
+          <input type="text" id="equipmentId" placeholder="e.g. P1/WEB/002" required list="codesDatalist">
+          <datalist id="codesDatalist"></datalist>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label for="category">Document Category</label>
+          <select id="category" required>
+            <option value="">-- Select Category --</option>
+            <optgroup label="Primary Documents">
+              <option value="Current PO">Current PO</option>
+              <option value="First PM Done Date">First PM Done Date</option>
+              <option value="Second PM Done Date">Second PM Done Date</option>
+              <option value="Third PM Done Date">Third PM Done Date</option>
+              <option value="Fourth PM Done Date">Fourth PM Done Date</option>
+            </optgroup>
+            <optgroup label="Previous POs">
+              <option value="Previous PO (2023-2024)">Previous PO (2023-2024)</option>
+              <option value="Previous PO (2024-2025)">Previous PO (2024-2025)</option>
+            </optgroup>
+            <optgroup label="Maintenance & PM Logs">
+              <option value="First PM 2024-2025">First PM 2024-2025</option>
+              <option value="Second PM 2024-2025">Second PM 2024-2025</option>
+              <option value="Breakdown 2024-2025">Breakdown 2024-2025</option>
+              <option value="Calibration 2024-2025">Calibration 2024-2025</option>
+              <option value="First PM 2025-2026">First PM 2025-2026</option>
+              <option value="Calibration 2025-2026">Calibration 2025-2026</option>
+              <option value="Second PM 2025-2026">Second PM 2025-2026</option>
+              <option value="Breakdown 2025-2026">Breakdown 2025-2026</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- File Pick Zone -->
+        <div class="form-group full-width">
+          <label>Select PDF Document</label>
+          <div class="file-dropzone" onclick="document.getElementById('pdfFile').click()">
+            <span style="font-size: 2rem;">📁</span>
+            <p id="fileLabel" style="margin-top: 0.5rem; font-weight: 600;">Click or Drag & Drop PDF file here</p>
+            <input type="file" id="pdfFile" accept="application/pdf" style="display: none;" required onchange="handleFileSelect(this)">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-group full-width">
+          <button type="submit" class="btn-submit" id="submitBtn">☁️ Upload PDF to Cloudinary</button>
+        </div>
+      </form>
+
+      <div id="statusMsg" class="status-msg"></div>
+    </div>
+
+    <!-- Active Mappings List Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>📋</span> Currently Uploaded PDF Documents
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="mappings-table">
+          <thead>
+            <tr>
+              <th>Equipment ID</th>
+              <th>Category / Field</th>
+              <th>Cloudinary PDF URL</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="mappingsBody">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted);">Loading active PDF links...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // BACKEND CONFIGURATION (Important for Vercel)
+    // ==========================================
+    // When deploying to Vercel, change this to your deployed backend URL.
+    // For local testing, keep it as 'http://localhost:5000'
+    // Dynamically detect backend URL (Localhost vs Render Cloud)
+    const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+      ? (window.location.origin.includes('5000') ? window.location.origin : 'http://localhost:5000')
+      : 'https://amc-backend-akqj.onrender.com';
+    
+    function handleFileSelect(input) {
+      const label = document.getElementById('fileLabel');
+      if (input.files && input.files[0]) {
+        label.innerText = `Selected: ${input.files[0].name} (${(input.files[0].size / 1024 / 1024).toFixed(2)} MB)`;
+        label.style.color = '#4ade80';
+      } else {
+        label.innerText = 'Click or Drag & Drop PDF file here';
+        label.style.color = 'var(--text-main)';
+      }
+    }
+
+    async function loadEquipmentCodes() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/planners/codes`);
+        const data = await res.json();
+        if (data.codes && Array.isArray(data.codes)) {
+          const datalist = document.getElementById('codesDatalist');
+          datalist.innerHTML = data.codes.map(c => `<option value="${c}">`).join('');
+        }
+      } catch (err) {
+        console.warn('Failed to load code hints:', err);
+      }
+    }
+
+    async function loadMappings() {
+      const tbody = document.getElementById('mappingsBody');
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/upload/pdf-mappings`);
+        const data = await res.json();
+        if (data.mappings && Object.keys(data.mappings).length > 0) {
+          let rowsHtml = '';
+          for (const [eqId, cats] of Object.entries(data.mappings)) {
+            for (const [cat, url] of Object.entries(cats)) {
+              rowsHtml += `
+                <tr>
+                  <td><strong>${eqId}</strong></td>
+                  <td><span style="color: #38bdf8;">${cat}</span></td>
+                  <td>
+                    <a href="${url}" target="_blank" class="link-btn">
+                      🔗 View PDF
+                    </a>
+                  </td>
+                  <td>
+                    <button class="btn-delete" onclick="deleteMapping('${eqId}', '${cat}')">Delete</button>
+                  </td>
+                </tr>
+              `;
+            }
+          }
+          tbody.innerHTML = rowsHtml;
+        } else {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No PDF documents uploaded yet.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">Error loading PDF mappings.</td></tr>`;
+      }
+    }
+
+    async function deleteMapping(equipmentId, category) {
+      if (!confirm(`Are you sure you want to delete the PDF link for "${equipmentId}" - ${category}?`)) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/upload/delete-pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ equipmentId, category }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadMappings();
+        } else {
+          alert('Failed to delete: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Network error deleting PDF mapping.');
+      }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('statusMsg');
+      const submitBtn = document.getElementById('submitBtn');
+
+      const equipmentId = document.getElementById('equipmentId').value.trim();
+      const category = document.getElementById('category').value.trim();
+      const fileInput = document.getElementById('pdfFile');
+
+      if (!equipmentId || !category || !fileInput.files[0]) {
+        status.className = 'status-msg error';
+        status.innerText = 'Please complete all required fields and choose a PDF file.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('equipmentId', equipmentId);
+      formData.append('category', category);
+      formData.append('pdf', fileInput.files[0]);
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = '⏳ Uploading to Cloudinary...';
+      status.style.display = 'none';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/upload/upload-pdf`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          status.className = 'status-msg success';
+          status.innerText = `✅ Success! PDF mapped to ${equipmentId} (${category}).`;
+          document.getElementById('uploadForm').reset();
+          handleFileSelect(fileInput);
+          loadMappings();
+        } else {
+          status.className = 'status-msg error';
+          status.innerText = `❌ Error: ${data.error || 'Upload failed'}`;
+        }
+      } catch (err) {
+        status.className = 'status-msg error';
+        status.innerText = `❌ Upload failed due to network or server error.`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '☁️ Upload PDF to Cloudinary';
+      }
+    });
+
+    // Initialize
+    loadEquipmentCodes();
+    loadMappings();
+  </script>
+</body>
+</html>

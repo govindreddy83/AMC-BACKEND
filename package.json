@@ -17,10 +17,12 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.18.1",
+    "cloudinary": "^2.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "multer": "^2.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
