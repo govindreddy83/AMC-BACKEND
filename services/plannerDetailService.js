@@ -134,14 +134,8 @@ class PlannerDetailService {
             const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], currentPlannerNo);
 
             const poNoVal = getVal(poNoIdx);
-            let poLinkVal = getVal(poLinkIdx);
-            if (poLinkVal === 'N/A' || !poLinkVal) {
-              if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
-                poLinkVal = poNoVal;
-              } else {
-                poLinkVal = getPdfLinkForCategory(currentPlannerNo, 'Current PO') || getPdfLinkForCategory(currentPlannerNo, 'poLink');
-              }
-            }
+            // Only pull PO PDF from Cloudinary PDF Mappings
+            const poLinkVal = getPdfLinkForCategory(currentPlannerNo, 'Current PO') || getPdfLinkForCategory(currentPlannerNo, 'poLink');
 
             return {
               plannerNumber: currentPlannerNo,
@@ -340,14 +334,8 @@ class PlannerDetailService {
           const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], plannerNo);
 
           const poNoVal = getVal(poNoIdx);
-          let poLinkVal = getVal(poLinkIdx);
-          if (poLinkVal === 'N/A' || !poLinkVal) {
-            if (poNoVal.startsWith('http://') || poNoVal.startsWith('https://')) {
-              poLinkVal = poNoVal;
-            } else {
-              poLinkVal = getPdfLinkForCategory(plannerNo, 'Current PO') || getPdfLinkForCategory(plannerNo, 'poLink');
-            }
-          }
+          // Only pull PO PDF from Cloudinary PDF Mappings
+          const poLinkVal = getPdfLinkForCategory(plannerNo, 'Current PO') || getPdfLinkForCategory(plannerNo, 'poLink');
 
           planners.push({
             plannerNumber: plannerNo,
