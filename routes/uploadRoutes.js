@@ -18,6 +18,7 @@ const upload = multer({
 });
 
 router.get('/pdf-mappings', UploadController.getMappings);
+router.get('/test-cloudinary', UploadController.testCloudinary);
 router.post('/upload-pdf', upload.single('pdf'), UploadController.uploadPdf);
 router.post('/delete-pdf', UploadController.deleteMapping);
 

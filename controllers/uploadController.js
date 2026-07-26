@@ -132,6 +132,35 @@ class UploadController {
       return res.status(500).json({ success: false, error: error.message });
     }
   }
+
+  static async testCloudinary(req, res) {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || (process.env.CLOUDINARY_URL ? 'Set via CLOUDINARY_URL' : 'Not configured');
+    const hasApiKey = Boolean(process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_URL);
+
+    if (!hasApiKey) {
+      return res.status(200).json({
+        connected: false,
+        message: 'Cloudinary API credentials missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in environment variables.',
+        cloudName: cloudName,
+      });
+    }
+
+    try {
+      const pingRes = await cloudinary.api.ping();
+      return res.status(200).json({
+        connected: true,
+        message: 'Cloudinary connected successfully!',
+        ping: pingRes,
+        cloudName: cloudName,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        connected: false,
+        message: 'Cloudinary connection failed: ' + err.message,
+        cloudName: cloudName,
+      });
+    }
+  }
 }
 
 module.exports = UploadController;
