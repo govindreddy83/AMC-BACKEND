@@ -1,36 +1,9 @@
-const fs = require('fs');
-const path = require('path');
 const cloudinary = require('../config/cloudinaryConfig');
-
-const MAPPINGS_FILE = path.join(__dirname, '../config/pdf_mappings.json');
-
-// Helper to read mappings
-const getMappings = () => {
-  try {
-    if (!fs.existsSync(MAPPINGS_FILE)) {
-      fs.writeFileSync(MAPPINGS_FILE, JSON.stringify({}, null, 2));
-      return {};
-    }
-    const content = fs.readFileSync(MAPPINGS_FILE, 'utf8');
-    return JSON.parse(content || '{}');
-  } catch (error) {
-    console.error('Error reading pdf_mappings.json:', error);
-    return {};
-  }
-};
-
-// Helper to write mappings
-const saveMappings = (mappings) => {
-  try {
-    fs.writeFileSync(MAPPINGS_FILE, JSON.stringify(mappings, null, 2));
-  } catch (error) {
-    console.error('Error saving pdf_mappings.json:', error);
-  }
-};
+const PdfMappingService = require('../services/pdfMappingService');
 
 class UploadController {
   static async getMappings(req, res) {
-    const mappings = getMappings();
+    const mappings = await PdfMappingService.fetchAllMappings();
     return res.status(200).json({ success: true, mappings });
   }
 
@@ -80,17 +53,11 @@ class UploadController {
         cloudinaryUrl = uploadResult.secure_url;
       } catch (cloudErr) {
         console.warn('Cloudinary upload warning:', cloudErr.message);
-        // Fallback: If Cloudinary credentials are default demo or not configured yet, generate local endpoint or demo fallback URL
         cloudinaryUrl = `https://res.cloudinary.com/demo/image/upload/sample.pdf`;
       }
 
-      // Save into pdf_mappings.json
-      const mappings = getMappings();
-      if (!mappings[cleanEquipmentId]) {
-        mappings[cleanEquipmentId] = {};
-      }
-      mappings[cleanEquipmentId][cleanCategory] = cloudinaryUrl;
-      saveMappings(mappings);
+      // Save into PdfMappingService (local + Google Sheets persistence)
+      const mappings = await PdfMappingService.saveMapping(cleanEquipmentId, cleanCategory, cloudinaryUrl);
 
       return res.status(200).json({
         success: true,
@@ -115,18 +82,8 @@ class UploadController {
       if (!equipmentId || !category) {
         return res.status(400).json({ success: false, error: 'equipmentId and category required' });
       }
-      const cleanEquipmentId = equipmentId.toString().trim().toUpperCase();
-      const cleanCategory = category.toString().trim();
 
-      const mappings = getMappings();
-      if (mappings[cleanEquipmentId] && mappings[cleanEquipmentId][cleanCategory]) {
-        delete mappings[cleanEquipmentId][cleanCategory];
-        if (Object.keys(mappings[cleanEquipmentId]).length === 0) {
-          delete mappings[cleanEquipmentId];
-        }
-        saveMappings(mappings);
-      }
-
+      const mappings = await PdfMappingService.deleteMapping(equipmentId, category);
       return res.status(200).json({ success: true, message: 'Mapping removed', mappings });
     } catch (error) {
       return res.status(500).json({ success: false, error: error.message });

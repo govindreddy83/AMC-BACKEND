@@ -1,26 +1,19 @@
 const GoogleSheetsService = require('./googleSheetsService');
-const fs = require('fs');
-const path = require('path');
+const PdfMappingService = require('./pdfMappingService');
 
-function getPdfLinkForCategory(plannerNo, categoryName) {
-  try {
-    const mappingsPath = path.join(__dirname, '../config/pdf_mappings.json');
-    if (!fs.existsSync(mappingsPath)) return '';
-    const content = fs.readFileSync(mappingsPath, 'utf8');
-    const mappings = JSON.parse(content || '{}');
-    const pNo = (plannerNo || '').toString().trim().toUpperCase();
-    if (!mappings[pNo]) return '';
-    
-    if (mappings[pNo][categoryName]) return mappings[pNo][categoryName];
-    
-    const catLower = categoryName.toLowerCase().replace(/[\s\-_]+/g, '');
-    for (const [key, url] of Object.entries(mappings[pNo])) {
-      if (key.toLowerCase().replace(/[\s\-_]+/g, '') === catLower) {
-        return url;
-      }
+function getPdfLinkForCategory(mappings, plannerNo, categoryName) {
+  if (!mappings || !plannerNo) return '';
+  const pNo = plannerNo.toString().trim().toUpperCase();
+  if (!mappings[pNo]) return '';
+
+  if (mappings[pNo][categoryName]) return mappings[pNo][categoryName];
+
+  const catLower = categoryName.toLowerCase().replace(/[\s\-_()]+/g, '');
+  for (const [key, url] of Object.entries(mappings[pNo])) {
+    const keyLower = key.toLowerCase().replace(/[\s\-_()]+/g, '');
+    if (keyLower === catLower || keyLower.includes(catLower) || catLower.includes(keyLower)) {
+      return url;
     }
-  } catch (err) {
-    // ignore
   }
   return '';
 }
@@ -41,6 +34,7 @@ class PlannerDetailService {
 
     const targetNo = plannerNo.toString().trim().toUpperCase();
     let rawRows = [];
+    const allMappings = await PdfMappingService.fetchAllMappings();
 
     try {
       rawRows = await GoogleSheetsService.readRawData('Planner!A1:AZ500');
@@ -135,7 +129,7 @@ class PlannerDetailService {
 
             const poNoVal = getVal(poNoIdx);
             // Only pull PO PDF from Cloudinary PDF Mappings
-            const poLinkVal = getPdfLinkForCategory(currentPlannerNo, 'Current PO') || getPdfLinkForCategory(currentPlannerNo, 'poLink');
+            const poLinkVal = getPdfLinkForCategory(allMappings, currentPlannerNo, 'Current PO') || getPdfLinkForCategory(allMappings, currentPlannerNo, 'poLink');
 
             return {
               plannerNumber: currentPlannerNo,
@@ -151,13 +145,13 @@ class PlannerDetailService {
               completedPm: completedPmCount,
               pendingPm: pendingPmCount,
               firstPmDate: getVal(firstPmDoneIdx),
-              firstPmLink: getPdfLinkForCategory(currentPlannerNo, 'First PM Done Date'),
+              firstPmLink: getPdfLinkForCategory(allMappings, currentPlannerNo, 'First PM Done Date'),
               secondPmDate: getVal(secondPmDoneIdx),
-              secondPmLink: getPdfLinkForCategory(currentPlannerNo, 'Second PM Done Date'),
+              secondPmLink: getPdfLinkForCategory(allMappings, currentPlannerNo, 'Second PM Done Date'),
               thirdPmDate: getVal(thirdPmDoneIdx),
-              thirdPmLink: getPdfLinkForCategory(currentPlannerNo, 'Third PM Done Date'),
+              thirdPmLink: getPdfLinkForCategory(allMappings, currentPlannerNo, 'Third PM Done Date'),
               fourthPmDate: getVal(fourthPmDoneIdx),
-              fourthPmLink: getPdfLinkForCategory(currentPlannerNo, 'Fourth PM Done Date'),
+              fourthPmLink: getPdfLinkForCategory(allMappings, currentPlannerNo, 'Fourth PM Done Date'),
               remarks: getVal(remarksIdx),
               invoiceStatus: getVal(invoiceStatusIdx),
               historyLogs: historyLogs,
@@ -243,6 +237,7 @@ class PlannerDetailService {
 
   static async getAllPlanners() {
     let rawRows = [];
+    const allMappings = await PdfMappingService.fetchAllMappings();
 
     try {
       rawRows = await GoogleSheetsService.readRawData('Planner!A1:AZ500');
@@ -335,7 +330,7 @@ class PlannerDetailService {
 
           const poNoVal = getVal(poNoIdx);
           // Only pull PO PDF from Cloudinary PDF Mappings
-          const poLinkVal = getPdfLinkForCategory(plannerNo, 'Current PO') || getPdfLinkForCategory(plannerNo, 'poLink');
+          const poLinkVal = getPdfLinkForCategory(allMappings, plannerNo, 'Current PO') || getPdfLinkForCategory(allMappings, plannerNo, 'poLink');
 
           planners.push({
             plannerNumber: plannerNo,
@@ -351,13 +346,13 @@ class PlannerDetailService {
             completedPm: completedPmCount,
             pendingPm: pendingPmCount,
             firstPmDate: getVal(firstPmDoneIdx),
-            firstPmLink: getPdfLinkForCategory(plannerNo, 'First PM Done Date'),
+            firstPmLink: getPdfLinkForCategory(allMappings, plannerNo, 'First PM Done Date'),
             secondPmDate: getVal(secondPmDoneIdx),
-            secondPmLink: getPdfLinkForCategory(plannerNo, 'Second PM Done Date'),
+            secondPmLink: getPdfLinkForCategory(allMappings, plannerNo, 'Second PM Done Date'),
             thirdPmDate: getVal(thirdPmDoneIdx),
-            thirdPmLink: getPdfLinkForCategory(plannerNo, 'Third PM Done Date'),
+            thirdPmLink: getPdfLinkForCategory(allMappings, plannerNo, 'Third PM Done Date'),
             fourthPmDate: getVal(fourthPmDoneIdx),
-            fourthPmLink: getPdfLinkForCategory(plannerNo, 'Fourth PM Done Date'),
+            fourthPmLink: getPdfLinkForCategory(allMappings, plannerNo, 'Fourth PM Done Date'),
             remarks: getVal(remarksIdx),
             invoiceStatus: getVal(invoiceStatusIdx),
             historyLogs: historyLogs,
