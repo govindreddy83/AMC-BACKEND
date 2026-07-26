@@ -68,7 +68,9 @@ class AreasService {
     }
 
     // Map unique values to array of objects { id, area }
-    const uniqueAreaList = Array.from(uniqueAreaSet);
+    const uniqueAreaList = Array.from(uniqueAreaSet).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
     return uniqueAreaList.map((areaName, index) => ({
       id: index + 1,
       area: areaName,

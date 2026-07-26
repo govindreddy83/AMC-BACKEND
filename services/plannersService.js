@@ -81,6 +81,10 @@ class PlannersService {
       matchedList.forEach((code) => plannerNumbers.push(code));
     }
 
+    plannerNumbers.sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
+
     return plannerNumbers.map((code) => ({
       plannerNo: code,
     }));
