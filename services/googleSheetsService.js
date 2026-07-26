@@ -73,6 +73,35 @@ class GoogleSheetsService {
   }
 
   /**
+   * Overwrites data in a Google Sheet range
+   * @param {string} range e.g., "PDF_Mappings!A:D"
+   * @param {Array<Array<any>>} values 2D array of values to write
+   */
+  static async updateData(range, values = []) {
+    const { sheets, sheetId } = getGoogleSheetsClient();
+    const response = await sheets.spreadsheets.values.update({
+      spreadsheetId: sheetId,
+      range: range,
+      valueInputOption: 'USER_ENTERED',
+      resource: { values },
+    });
+    return response.data;
+  }
+
+  /**
+   * Clears data in a Google Sheet range
+   * @param {string} range e.g., "PDF_Mappings!A2:D500"
+   */
+  static async clearData(range) {
+    const { sheets, sheetId } = getGoogleSheetsClient();
+    const response = await sheets.spreadsheets.values.clear({
+      spreadsheetId: sheetId,
+      range: range,
+    });
+    return response.data;
+  }
+
+  /**
    * Automatically checks if a sheet tab exists, and if not, creates it programmatically.
    * @param {string} tabName name of the tab to check/create (e.g. "PDF_Mappings")
    */

@@ -80,13 +80,32 @@ class PdfMappingService {
     const cleanId = (equipmentId || '').toString().trim().toUpperCase();
     const cleanCategory = (category || '').toString().trim();
 
-    const mappings = this.getLocalMappings();
+    // Fetch all to ensure we have latest from Sheets
+    const mappings = await this.fetchAllMappings();
+
     if (mappings[cleanId] && mappings[cleanId][cleanCategory]) {
       delete mappings[cleanId][cleanCategory];
       if (Object.keys(mappings[cleanId]).length === 0) {
         delete mappings[cleanId];
       }
       this.saveLocalMappings(mappings);
+
+      // Rewrite Google Sheets tab to reflect deletion
+      try {
+        await GoogleSheetsService.ensureTabExists('PDF_Mappings');
+        
+        const newRows = [['Equipment ID', 'Category', 'PDF URL', 'Timestamp']];
+        for (const [eq, cats] of Object.entries(mappings)) {
+          for (const [cat, url] of Object.entries(cats)) {
+            newRows.push([eq, cat, url, new Date().toISOString()]);
+          }
+        }
+        
+        await GoogleSheetsService.clearData('PDF_Mappings!A:D');
+        await GoogleSheetsService.updateData('PDF_Mappings!A1', newRows);
+      } catch (err) {
+        console.warn('Could not sync deletion to Google Sheets:', err.message);
+      }
     }
     return mappings;
   }
