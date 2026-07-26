@@ -125,7 +125,7 @@ class PlannerDetailService {
             const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
             const currentPlannerNo = rawRows[i][plannerNoIdx] || plannerNo;
-            const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], currentPlannerNo);
+            const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(allMappings, rawRows[0], rawRows[i], currentPlannerNo);
 
             const poNoVal = getVal(poNoIdx);
             // Only pull PO PDF from Cloudinary PDF Mappings
@@ -178,7 +178,7 @@ class PlannerDetailService {
     return null;
   }
 
-  static extractDynamicHistoryLogs(rawHeaders, rowData, plannerNo = '') {
+  static extractDynamicHistoryLogs(allMappings, rawHeaders, rowData, plannerNo = '') {
     const logs = [];
     if (!rawHeaders || !rowData) return logs;
 
@@ -198,7 +198,7 @@ class PlannerDetailService {
           value: val,
           type: 'po',
           year: year,
-          pdfLink: getPdfLinkForCategory(plannerNo, cleanH),
+          pdfLink: getPdfLinkForCategory(allMappings, plannerNo, cleanH),
         });
       } 
       // 2. Match Maintenance/PM/Breakdown/Calibration logs (Must have explicit PM/Breakdown/Calibration term AND a year range like 2024-2025)
@@ -226,7 +226,7 @@ class PlannerDetailService {
             value: val,
             type: type,
             year: yearRangeMatch[0].replace(/\s+/g, ''),
-            pdfLink: getPdfLinkForCategory(plannerNo, cleanH),
+            pdfLink: getPdfLinkForCategory(allMappings, plannerNo, cleanH),
           });
         }
       }
@@ -326,7 +326,7 @@ class PlannerDetailService {
           const completedPmCount = completedPmVal !== 'N/A' ? completedPmVal.toString().padStart(2, '0') : 'N/A';
           const pendingPmCount = pendingPmVal !== 'N/A' ? pendingPmVal.toString().padStart(2, '0') : 'N/A';
 
-          const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(rawRows[0], rawRows[i], plannerNo);
+          const historyLogs = PlannerDetailService.extractDynamicHistoryLogs(allMappings, rawRows[0], rawRows[i], plannerNo);
 
           const poNoVal = getVal(poNoIdx);
           // Only pull PO PDF from Cloudinary PDF Mappings
