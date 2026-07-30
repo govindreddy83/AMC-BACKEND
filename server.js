@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const apiRoutes = require('./routes/apiRoutes');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
+const { initFirebaseAdmin } = require('./config/firebaseAdmin');
+const CronService = require('./services/cronService');
 
 dotenv.config();
 
@@ -30,6 +32,9 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       admin: '/admin',
+      registerToken: '/api/register-token',
+      sendTestNotification: '/api/send-test-notification?token=YOUR_FCM_TOKEN',
+      triggerCronCheck: '/api/trigger-cron-check',
       readSheetsJson: '/api/sheets/read?range=Sheet1!A1:Z100',
       readSheetsRaw: '/api/sheets/raw?range=Sheet1!A1:Z100',
       appendSheetsData: '/api/sheets/append',
@@ -54,4 +59,8 @@ app.listen(PORT, () => {
   console.log(`🚀 AMC Planner Backend listening on http://localhost:${PORT}`);
   console.log(`🔑 Service Account Keyfile Path: ${process.env.GOOGLE_APPLICATION_CREDENTIALS}`);
   console.log(`📊 Google Sheet ID: ${process.env.GOOGLE_SHEET_ID}`);
+  
+  // Initialize Firebase Admin & Cron Job Service
+  initFirebaseAdmin();
+  CronService.initCronJob();
 });

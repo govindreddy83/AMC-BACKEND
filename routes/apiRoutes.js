@@ -5,6 +5,7 @@ const areasRoutes = require('./areasRoutes');
 const plannersRoutes = require('./plannersRoutes');
 const plannerDetailRoutes = require('./plannerDetailRoutes');
 const uploadRoutes = require('./uploadRoutes');
+const fcmRoutes = require('./fcmRoutes');
 const diagnosticController = require('../controllers/diagnosticController');
 
 // API Healthcheck route
@@ -25,5 +26,6 @@ router.use('/areas', areasRoutes);
 router.use('/planners', plannersRoutes);
 router.use('/planner', plannerDetailRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/', fcmRoutes);
 
 module.exports = router;
