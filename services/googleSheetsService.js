@@ -133,7 +133,7 @@ class GoogleSheetsService {
           },
         });
 
-        // Add headers for PDF_Mappings
+        // Add headers for specific auto-created tabs
         if (tabName === 'PDF_Mappings') {
           await sheets.spreadsheets.values.update({
             spreadsheetId: sheetId,
@@ -141,6 +141,24 @@ class GoogleSheetsService {
             valueInputOption: 'USER_ENTERED',
             resource: {
               values: [['Equipment ID', 'Category', 'PDF URL', 'Timestamp']],
+            },
+          });
+        } else if (tabName === 'FCM_Tokens') {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range: 'FCM_Tokens!A1:D1',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+              values: [['Email', 'Token', 'RegisteredAt', 'LastUpdated']],
+            },
+          });
+        } else if (tabName === 'Notification_History') {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range: 'Notification_History!A1:F1',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+              values: [['EquipmentID', 'Area', 'PONumber', 'ExpiryDate', 'ReminderType', 'SentAt']],
             },
           });
         }

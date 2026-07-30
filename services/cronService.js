@@ -42,24 +42,7 @@ class CronService {
    * Ensure Notification_History tab exists in Google Sheets to track sent reminders
    */
   static async ensureNotificationHistoryTab() {
-    try {
-      const rows = await GoogleSheetsService.readRawData('Notification_History!A1:Z5');
-      if (!rows || rows.length === 0) {
-        await GoogleSheetsService.appendData('Notification_History!A1', [
-          ['EquipmentID', 'Area', 'PONumber', 'ExpiryDate', 'ReminderType', 'SentAt'],
-        ]);
-        console.log('✅ Created "Notification_History" tab in Google Sheets.');
-      }
-    } catch (_) {
-      try {
-        await GoogleSheetsService.appendData('Notification_History!A1', [
-          ['EquipmentID', 'Area', 'PONumber', 'ExpiryDate', 'ReminderType', 'SentAt'],
-        ]);
-        console.log('✅ Auto-created "Notification_History" tab in Google Sheets.');
-      } catch (err) {
-        console.warn('⚠️ Notice auto-creating Notification_History sheet:', err.message);
-      }
-    }
+    await GoogleSheetsService.ensureTabExists('Notification_History');
   }
 
   /**

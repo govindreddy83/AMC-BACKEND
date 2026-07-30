@@ -6,26 +6,7 @@ class FcmService {
    * Ensure FCM_Tokens tab exists in Google Sheets with proper headers
    */
   static async ensureFcmTokensTab() {
-    try {
-      const sheetName = 'FCM_Tokens';
-      const headers = ['Email', 'Token', 'RegisteredAt', 'LastUpdated'];
-      
-      const rows = await GoogleSheetsService.readRawData(`${sheetName}!A1:Z10`);
-      if (!rows || rows.length === 0) {
-        await GoogleSheetsService.appendData(`${sheetName}!A1`, [headers]);
-        console.log(`✅ Created "${sheetName}" tab in Google Sheets.`);
-      }
-    } catch (error) {
-      // Tab might not exist, append headers to create it automatically
-      try {
-        await GoogleSheetsService.appendData('FCM_Tokens!A1', [
-          ['Email', 'Token', 'RegisteredAt', 'LastUpdated'],
-        ]);
-        console.log('✅ Auto-created "FCM_Tokens" tab in Google Sheets.');
-      } catch (createErr) {
-        console.warn('⚠️ Notice auto-creating FCM_Tokens sheet:', createErr.message);
-      }
-    }
+    await GoogleSheetsService.ensureTabExists('FCM_Tokens');
   }
 
   /**
