@@ -133,7 +133,9 @@ class FcmService {
       android: {
         priority: 'high',
         notification: {
-          channelId: 'amc_reminders_channel',
+          channelId: 'amc_notifications',
+          icon: 'ic_notification',
+          color: '#D32F2F',
           sound: 'default',
           priority: 'max',
           visibility: 'public',
