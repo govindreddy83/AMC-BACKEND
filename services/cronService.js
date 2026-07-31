@@ -205,20 +205,26 @@ class CronService {
   }
 
   /**
-   * Initialize daily scheduled cron job at 9:00 AM
+   * Initialize scheduled cron job at 9:00 AM, 2:00 PM & 6:00 PM IST
    */
   static initCronJob() {
-    // Schedule cron job every day at 9:00 AM ('0 9 * * *')
-    cron.schedule('0 9 * * *', async () => {
-      console.log('⏰ [CRON SCHEDULE] Executing daily 9:00 AM AMC Expiry check...');
-      try {
-        await CronService.checkAndSendAmcReminders();
-      } catch (err) {
-        console.error('❌ Daily Cron Execution Error:', err.message);
+    // Schedule cron job daily at 9:00 AM, 2:00 PM (14:00), and 6:00 PM (18:00) IST
+    cron.schedule(
+      '0 9,14,18 * * *',
+      async () => {
+        console.log('⏰ [CRON SCHEDULE] Executing scheduled AMC Expiry check...');
+        try {
+          await CronService.checkAndSendAmcReminders();
+        } catch (err) {
+          console.error('❌ Scheduled Cron Execution Error:', err.message);
+        }
+      },
+      {
+        timezone: 'Asia/Kolkata',
       }
-    });
+    );
 
-    console.log('📅 AMC Expiry Notification Cron Job scheduled (Daily at 9:00 AM).');
+    console.log('📅 AMC Expiry Notification Cron Job scheduled (Daily at 9:00 AM & 2:00 PM & 6:00 PM).');
   }
 }
 
