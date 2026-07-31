@@ -47,7 +47,7 @@ class FcmService {
 
     if (tokenFoundIndex !== -1) {
       // Update existing token timestamp & email in Google Sheet
-      await GoogleSheetsService.updateCell(`FCM_Tokens!A${tokenFoundIndex}:D${tokenFoundIndex}`, [
+      await GoogleSheetsService.updateData(`FCM_Tokens!A${tokenFoundIndex}:D${tokenFoundIndex}`, [
         [cleanEmail, cleanToken, rows[tokenFoundIndex - 1][2] || now, now],
       ]);
       console.log(`✅ FCM Token updated in Google Sheets for ${cleanEmail}`);
