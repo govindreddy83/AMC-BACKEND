@@ -36,6 +36,9 @@ class PlannersService {
       const areaIndex = headers.findIndex((h) =>
         ['area', 'block details', 'block_details', 'block'].includes(h)
       );
+      const plannerNoIndex = headers.findIndex((h) =>
+        ['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id'].includes(h)
+      );
       const sNoIndex = headers.findIndex((h) =>
         ['sno', 's.no', 's.no.', 'sl.no', 'serial no', 'sl no', 's no', 's_no', 'si.no', 's. no', 's. no.'].includes(h)
       );
