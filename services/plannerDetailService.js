@@ -56,6 +56,17 @@ class PlannerDetailService {
         return headers.findIndex((h) => normalizedTargets.includes(h));
       };
 
+      let sNoIdx = findHeaderIndex([
+        'sno', 's.no', 's.no.', 'sl.no', 'serial no', 'sl no', 's no', 's_no', 'si.no', 's. no', 's. no.',
+        'sl. no', 'sl. no.', 'sr.no', 'sr. no', 'sr no', 'sn', 's/n', 's.n.', 'serial number', 's. serial no',
+        '#', 'sl', 's.n', 's/no'
+      ]);
+      if (sNoIdx === -1 && headers.length > 0) {
+        const firstColHeader = headers[0] || '';
+        if (firstColHeader.includes('s') || firstColHeader.includes('no') || firstColHeader.includes('#') || firstColHeader.includes('sl')) {
+          sNoIdx = 0;
+        }
+      }
       const plannerNoIdx = findHeaderIndex(['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id']);
       const poNoIdx = findHeaderIndex(['ponumber', 'po_number', 'po_no', 'po no', 'current po', 'current_po (2025-2026)']);
       const poLinkIdx = findHeaderIndex(['po link', 'po_link', 'pdf link', 'pdf_link', 'po pdf', 'popdf', 'po url', 'po doc', 'po document', 'pdf_url', 'pdf url']);
@@ -132,6 +143,7 @@ class PlannerDetailService {
             const poLinkVal = getPdfLinkForCategory(allMappings, currentPlannerNo, 'Current PO') || getPdfLinkForCategory(allMappings, currentPlannerNo, 'poLink');
 
             return {
+              sNo: getVal(sNoIdx),
               plannerNumber: currentPlannerNo,
               poNumber: poNoVal,
               poLink: poLinkVal,
