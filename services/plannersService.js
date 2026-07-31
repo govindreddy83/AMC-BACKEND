@@ -36,8 +36,8 @@ class PlannersService {
       const areaIndex = headers.findIndex((h) =>
         ['area', 'block details', 'block_details', 'block'].includes(h)
       );
-      const plannerNoIndex = headers.findIndex((h) =>
-        ['plannerno', 'planner_no', 'code', 'planner no', 'equipment id', 'equipment_id'].includes(h)
+      const sNoIndex = headers.findIndex((h) =>
+        ['sno', 's.no', 's.no.', 'sl.no', 'serial no', 'sl no', 's no', 's_no', 'si.no', 's. no', 's. no.'].includes(h)
       );
 
       if (areaIndex !== -1 && plannerNoIndex !== -1) {
@@ -57,9 +57,12 @@ class PlannersService {
           const codeVal = rawRows[i][plannerNoIndex]
             ? rawRows[i][plannerNoIndex].toString().trim()
             : '';
+          const sNoVal = sNoIndex !== -1 && rawRows[i][sNoIndex]
+            ? rawRows[i][sNoIndex].toString().trim()
+            : '';
 
           if (rowArea === normalizedArea && codeVal) {
-            plannerNumbers.push(codeVal);
+            plannerNumbers.push({ plannerNo: codeVal, sNo: sNoVal });
           }
         }
       }
@@ -78,16 +81,14 @@ class PlannersService {
         `${normalizedArea}/WEB/001`,
         `${normalizedArea}/WEB/002`,
       ];
-      matchedList.forEach((code) => plannerNumbers.push(code));
+      matchedList.forEach((code, idx) => plannerNumbers.push({ plannerNo: code, sNo: (idx + 1).toString() }));
     }
 
     plannerNumbers.sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+      a.plannerNo.localeCompare(b.plannerNo, undefined, { numeric: true, sensitivity: 'base' })
     );
 
-    return plannerNumbers.map((code) => ({
-      plannerNo: code,
-    }));
+    return plannerNumbers;
   }
 
   /**
